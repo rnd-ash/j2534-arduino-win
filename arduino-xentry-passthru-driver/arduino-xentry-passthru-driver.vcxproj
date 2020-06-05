@@ -172,17 +172,21 @@
     <ClInclude Include="arduino_passthru.h" />
     <ClInclude Include="arduino_passthru_dll.h" />
     <ClInclude Include="defines.h" />
+    <ClInclude Include="device.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="j2534_v0404.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="msg_handler.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="XentryComm.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ArduinoComm.cpp" />
     <ClCompile Include="arduino_passthru.cpp" />
+    <ClCompile Include="device.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="msg_handler.cpp" />
     <ClCompile Include="XentryComm.cpp" />
   </ItemGroup>
   <ItemGroup>

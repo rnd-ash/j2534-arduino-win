@@ -1,7 +1,6 @@
 #include "Logger.h"
 #include <mutex>
 
-std::mutex mutex;
 void Logger::logInfo(std::string method, std::string message) {
 	writeToFile("[INFO ] " + method + " - " + message);
 }
@@ -53,10 +52,25 @@ std::string Logger::payloadToString(DATA_PAYLOAD* p) {
 	std::string x = "";
 	char buf[4] = { 0x00 };
 	for (int i = 0; i < p->argSize; i++) {
-		sprintf(buf, "%02X ", p->args[i]);
+		sprintf_s(buf, "%02X ", p->args[i]);
 		x += buf;
 	}
 	return x;
+}
+
+std::string Logger::passThruMsg_toString(_PASSTHRU_MSG* msg) {
+	char buf[5120] = { 0x00 };
+	if (msg != NULL) {
+		sprintf_s(buf, "Payload size: %d, RxFlags: %d, TxFlags: %d, Timestamp: %d, DATA: [",
+			msg->DataSize,
+			msg->RxStatus,
+			msg->TxFlags,
+			msg->Timestamp);
+		return std::string(buf) + bytesToString(msg->DataSize, msg->Data) + "]";
+	}
+	else {
+		return "NULL";
+	}
 }
 
 std::string Logger::bytesToString(int size,  unsigned char* bytes)
@@ -65,10 +79,14 @@ std::string Logger::bytesToString(int size,  unsigned char* bytes)
 
 	char buf[4] = { 0x00 };
 	for (int i = 0; i < size; i++) {
-		sprintf_s(buf, "%02X ", bytes[i]);
+		sprintf(buf, "%02X ", bytes[i]);
 		ret += buf;
 	}
 	return ret;
+}
+
+Logger::Logger()
+{
 }
 
 std::string Logger::argFormatToString(const char* fmt, va_list* args) {
@@ -83,7 +101,7 @@ void Logger::writeToFile(std::string message) {
 	GetSystemTime(&st);
 	sprintf_s(time, "[%02d:%02d:%02d.%3d] ", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 	std::ofstream handle;
-	mutex.lock();
+	this->mutex.lock();
 	try {
 		handle.open(LOG_FILE, std::ios_base::app);
 		handle << time << message << "\n" << std::flush;
@@ -95,7 +113,7 @@ void Logger::writeToFile(std::string message) {
 	catch (std::ofstream::failure e) {
 		//TODO handle error
 	}
-	mutex.unlock();
+	this->mutex.unlock();
 }
 
-Logger LOGGER = Logger();
+Logger LOGGER;

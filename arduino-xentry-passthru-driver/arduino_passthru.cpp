@@ -1,14 +1,16 @@
 #include "arduino_passthru.h"
 #include "Logger.h"
+#include "device.h"
 
 /*
 http://www.drewtech.com/support/passthru/open.html
 Establish a logical communication channel with the vehicle network (via the PassThru device) using the specified network layer protocol and selected protocol options.
 */
 DllExport PassThruOpen(void* pName, unsigned long* pDeviceID) {
-	*pDeviceID = 12;
+	*pDeviceID = device_table::free_id;
+	device_table::free_id += 1;
 	LOGGER.logInfo("DllExport::PassThruOpen", "Opening device. pName is %s, setting pDeviceID to %lu", pName, *pDeviceID);
-	return STATUS_NOERROR;
+	return dev_map.add_device(*pDeviceID);
 }
 
 /*
@@ -18,7 +20,7 @@ periodic messages will halt, and the hardware will return to its default state.
 */
 DllExport PassThruClose(unsigned long DeviceID) {
 	LOGGER.logInfo("DllExport::PassThruClose", "Closing device with ID %lu", DeviceID);
-	return STATUS_NOERROR;
+	return dev_map.remove_device(DeviceID);
 }
 
 /*
@@ -27,7 +29,13 @@ Establish a logical communication channel with the vehicle network (via the Pass
 */
 DllExport PassThruConnect(unsigned long DeviceID, unsigned long ProtocolID, unsigned long Flags, unsigned long Baudrate, unsigned long* pChannelID) {
 	LOGGER.logInfo("DllExport::PassThruConnect", "Asked to connect passthru. DeviceID: %lu, protocol: %lu, Flags: %lu, baudrate: %lu", DeviceID, ProtocolID, Flags, Baudrate);
-	return STATUS_NOERROR;
+	if (ProtocolID != ISO15765 && ProtocolID != CAN) {
+		// For testing ISO protocol, reject K-Line communication
+		return ERR_INVALID_PROTOCOL_ID;
+	}
+	return dev_map.add_channel(DeviceID, ProtocolID, Flags, Baudrate, pChannelID);
+	
+	//return STATUS_NOERROR;
 }
 
 /*
@@ -39,7 +47,8 @@ will be cleared.
 */
 DllExport PassThruDisconnect(unsigned long ChannelID) {
 	LOGGER.logInfo("DllExport::PassThruDisconnect", "Disconnecting channel with ID %lu", ChannelID);
-	return STATUS_NOERROR;
+	return dev_map.remove_channel(ChannelID);
+	//return STATUS_NOERROR;
 }
 
 /*
@@ -58,7 +67,12 @@ Transmit network protocol messages over an existing logical communication channe
 */
 DllExport PassThruWriteMsgs(unsigned long ChannelID, PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout) {
 	LOGGER.logInfo("DllExport::PassThruWriteMsgs", "Writing messages to channel %lu. Timeout is %lu ms", ChannelID, Timeout);
-	return STATUS_NOERROR;
+	try {
+		return dev_map.getChannel(ChannelID)->send_message(pMsg, pNumMsgs, Timeout);
+	}
+	catch (std::exception e) {
+		return ERR_INVALID_CHANNEL_ID;
+	}
 }
 
 /*

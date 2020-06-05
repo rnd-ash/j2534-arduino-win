@@ -13,6 +13,7 @@
 #define LOG_FILE "c:\\arduino_passthru\\activity.log"
 
 class Logger {
+	std::mutex mutex;
 public:
 	void logInfo(std::string method, std::string message);
 	void logWarn(std::string method, std::string message);
@@ -23,7 +24,9 @@ public:
 	void logError(std::string method, const char* fmt, ...);
 	void logDebug(std::string method, const char* fmt, ...);
 	std::string payloadToString(DATA_PAYLOAD *p);
+	std::string passThruMsg_toString(_PASSTHRU_MSG* msg);
 	std::string bytesToString(int size, unsigned char* bytes);
+	Logger();
 private:
 	std::string argFormatToString(const char* fmt, va_list* args);
 	void writeToFile(std::string message);
