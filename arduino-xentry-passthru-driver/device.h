@@ -19,12 +19,17 @@ public:
 	void setBaudRate(unsigned long baud);
 	void closeChannel();
 	int send_message(PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout);
+	int handleIOCTL(unsigned long IoctlID, void* pInput, void* pOutput);
+	int add_filter(unsigned long FilterType, PASSTHRU_MSG* pMaskMsg, PASSTHRU_MSG* pPatternMsg, PASSTHRU_MSG* pFlowControlMsg, unsigned long* pFilterID);
+	int rem_filter(unsigned long filterID);
 private:
 	msg_handler *handler;
 	unsigned long deviceID;
 	unsigned long baud;
 	unsigned long flags;
 	unsigned long protocol;
+	void getConfig(SCONFIG* c);
+	void setConfig(SCONFIG* c);
 };
 
 class device_table {

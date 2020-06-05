@@ -99,7 +99,10 @@ namespace XentryComm{
 		LOGGER.logInfo("XentryComm::CommLoop", "Starting comm loop");
 		while (true) {
 			if (ArduinoComm::readPayload(&d)) {
-				// TODO READ PAYLOAD HERE
+				if (d.cmd == CMD_CAN) {
+					LOGGER.logInfo("XENTRY", "Incomming data from ECU: "+LOGGER.bytesToString(d.argSize, d.args));
+					// TODO Send messages to channel
+				}
 			}
 		}
 		return 1;

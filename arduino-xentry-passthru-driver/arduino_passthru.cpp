@@ -106,8 +106,19 @@ existing receive messages to be removed from the PassThru device receive queue.
 */
 DllExport PassThruStartMsgFilter(unsigned long ChannelID, unsigned long FilterType, PASSTHRU_MSG* pMaskMsg, PASSTHRU_MSG* pPatternMsg, PASSTHRU_MSG* pFlowControlMsg, unsigned long* pFilterID) {
 	
-	LOGGER.logInfo("DllExport::PassThruStartMsgFilter", "Asked to start message filter for channel %lu. Filter ID: %lu, Filter type: %lu", ChannelID, pFilterID, FilterType);
-	return STATUS_NOERROR;
+	LOGGER.logInfo("DllExport::PassThruStartMsgFilter", "Asked to start message filter for channel %lu, Filter type: %lu", ChannelID, FilterType);
+	try {
+		return dev_map.getChannel(ChannelID)->add_filter(
+			FilterType,
+			pMaskMsg,
+			pPatternMsg,
+			pFlowControlMsg,
+			pFilterID
+		);
+	}
+	catch (std::exception e) {
+		return ERR_INVALID_CHANNEL_ID;
+	}
 }
 
 /*
@@ -116,7 +127,12 @@ Terminate the specified network protocol filter. Once terminated the filter iden
 */
 DllExport PassThruStopMsgFilter(unsigned long ChannelID, unsigned long FilterID) {
 	LOGGER.logInfo("DllExport::PassThruStopMsgFilter", "Asked to stop message filter for channel %lu. Filter ID: %lu", ChannelID, FilterID);
-	return STATUS_NOERROR;
+	try {
+		return dev_map.getChannel(ChannelID)->rem_filter(FilterID);
+	}
+	catch (std::exception e) {
+		return ERR_INVALID_CHANNEL_ID;
+	}
 }
 
 /*
@@ -162,6 +178,17 @@ http://www.drewtech.com/support/passthru/ioctl.html
 The PassThruIoctl function is a general purpose I/O control function for modifying the vehicle network interface's characteristics.
 */
 DllExport PassThruIoctl(unsigned long ChannelID, unsigned long IoctlID, void* pInput, void* pOutput) {
+	if (IoctlID == READ_VBATT) {
+		// Just return 12.1V
+		*(unsigned long*)pOutput = 12100; //in mV
+		return STATUS_NOERROR;
+	}
+
 	LOGGER.logInfo("DllExport::PassThruIoctl", "IOCTL Handler for channel %lu. IOCTL_ID: %lu", ChannelID, IoctlID);
-	return STATUS_NOERROR;
+	try {
+		return dev_map.getChannel(ChannelID)->handleIOCTL(IoctlID, pInput, pOutput);
+	}
+	catch (std::exception e) {
+		return ERR_INVALID_CHANNEL_ID;
+	}
 }

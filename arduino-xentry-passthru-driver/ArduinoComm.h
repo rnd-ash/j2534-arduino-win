@@ -7,6 +7,9 @@
 #include <Windows.h>
 
 #define CMD_LOG 0x00
+#define CMD_BAUD 0x01
+#define CMD_SEND 0x02
+#define CMD_CAN 0x03
 
 struct DATA_PAYLOAD {
 	uint8_t argSize;

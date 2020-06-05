@@ -135,6 +135,65 @@ void device_channel::closeChannel()
 
 int device_channel::send_message(PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout)
 {
-	return handler->send_payload(pMsg, pNumMsgs, Timeout);
+	return handler->send_payload(pMsg, pNumMsgs, Timeout, baud);
+}
+
+int device_channel::handleIOCTL(unsigned long IoctlID, void* pInput, void* pOutput)
+{
+	SCONFIG_LIST* input = (SCONFIG_LIST*)pInput;
+	switch (IoctlID)
+	{
+	case GET_CONFIG:
+		for (unsigned long i = 0; i < input->NumOfParams; i++) {
+			getConfig(&input->ConfigPtr[i]);
+		}
+		break;
+	case SET_CONFIG:
+		for (unsigned long i = 0; i < input->NumOfParams; i++) {
+			setConfig(&input->ConfigPtr[i]);
+		}
+		break;
+	default:
+		LOGGER.logError("CHAN_IOCTL", "Cannot handle IOCTL ID %lu", IoctlID);
+		return ERR_INVALID_IOCTL_ID;
+	}
+
+	return STATUS_NOERROR;
+}
+
+int device_channel::add_filter(unsigned long FilterType, PASSTHRU_MSG* pMaskMsg, PASSTHRU_MSG* pPatternMsg, PASSTHRU_MSG* pFlowControlMsg, unsigned long* pFilterID)
+{
+	return handler->add_filter(FilterType, pMaskMsg, pPatternMsg, pFlowControlMsg, pFilterID);
+}
+
+int device_channel::rem_filter(unsigned long filterID)
+{
+	LOGGER.logInfo("CHAN_RFILT", "Removing filter with ID %lu", filterID);
+	return handler->remove_filter(filterID);
+}
+
+void device_channel::getConfig(SCONFIG* c)
+{
+}
+
+void device_channel::setConfig(SCONFIG* c)
+{
+	// Read from sconfig pointer
+	switch (c->Parameter) {
+	case ISO15765_BS:
+		if (protocol == ISO15765) {
+			LOGGER.logDebug("CHAN_GCFG", "Set ISO15765 block size to %lu frames", c->Value);
+			dynamic_cast<iso15765_handler*>(handler)->bs = c->Value;
+		}
+		break;
+	case ISO15765_STMIN:
+		if (protocol == ISO15765) {
+			LOGGER.logDebug("CHAN_GCFG", "Set ISO15765 Min Seperation time to %lu ms", c->Value);
+			dynamic_cast<iso15765_handler*>(handler)->st_min = c->Value;
+		}
+		break;
+	default:
+		break;
+	}
 }
 
