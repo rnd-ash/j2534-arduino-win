@@ -59,6 +59,9 @@ namespace ArduinoComm {
 		DWORD written = 0;
 		// Too big for 1 payload for arduino - TODO - split payloads
 		mutex.lock();
+		if (f->cmd == CMD_CAN) {
+			LOGGER.logDebug("ARDUINO_WRITE", "Sending CAN FRAME: " + LOGGER.bytesToString(f->argSize, f->args));
+		}
 		f->argSize++;
 		if (!WriteFile(handler, f, f->argSize+1, NULL, NULL)) {
 			DWORD error = GetLastError();
@@ -85,6 +88,8 @@ namespace ArduinoComm {
 			if (f->cmd == CMD_LOG) {
 				LOGGER.logInfo("ARDUINO LOG", "%s", f->args);
 				return false;
+			} else if (f->cmd == CMD_CAN) {
+				LOGGER.logDebug("ARDUINO_READ", "Reading CAN FRAME: " + LOGGER.bytesToString(f->argSize, f->args));
 			}
 
 			return true;

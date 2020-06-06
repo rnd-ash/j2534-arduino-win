@@ -2,6 +2,7 @@
 
 #include <map>
 #include "msg_handler.h"
+#include "ArduinoComm.h"
 
 class device
 {
@@ -22,6 +23,8 @@ public:
 	int handleIOCTL(unsigned long IoctlID, void* pInput, void* pOutput);
 	int add_filter(unsigned long FilterType, PASSTHRU_MSG* pMaskMsg, PASSTHRU_MSG* pPatternMsg, PASSTHRU_MSG* pFlowControlMsg, unsigned long* pFilterID);
 	int rem_filter(unsigned long filterID);
+	void recvPayload(DATA_PAYLOAD *p);
+	int read_messages(PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout);
 private:
 	msg_handler *handler;
 	unsigned long deviceID;
@@ -43,6 +46,7 @@ public:
 	int remove_channel(unsigned long chanID);
 	device* getDev(unsigned long id);
 	device_channel* getChannel(unsigned long id);
+	void processPayload(DATA_PAYLOAD* msg);
 private:
 	std::map<unsigned long, device> device_list;
 	std::map<unsigned long, device_channel> channels;

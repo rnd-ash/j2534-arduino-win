@@ -57,8 +57,15 @@ Receive network protocol messages, receive indications, and transmit indications
 Messages will flow through PassThru device to the User Application..
 */
 DllExport PassThruReadMsgs(unsigned long ChannelID, PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout) {
-	LOGGER.logInfo("DllExport::PassThruReadMsgs", "Asked to read messages on channel %lu. Timeout is %lu ms", ChannelID, Timeout);
-	return ERR_BUFFER_EMPTY;
+	//LOGGER.logInfo("DllExport::PassThruReadMsgs", "Asked to read messages on channel %lu. Timeout is %lu ms", ChannelID, Timeout);
+	//return ERR_BUFFER_EMPTY;
+	device_channel* c = dev_map.getChannel(ChannelID);
+	if (c == nullptr) {
+		return ERR_INVALID_CHANNEL_ID;
+	}
+	else {
+		return c->read_messages(pMsg, pNumMsgs, Timeout);
+	}
 }
 
 /*
@@ -67,11 +74,12 @@ Transmit network protocol messages over an existing logical communication channe
 */
 DllExport PassThruWriteMsgs(unsigned long ChannelID, PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout) {
 	LOGGER.logInfo("DllExport::PassThruWriteMsgs", "Writing messages to channel %lu. Timeout is %lu ms", ChannelID, Timeout);
-	try {
-		return dev_map.getChannel(ChannelID)->send_message(pMsg, pNumMsgs, Timeout);
-	}
-	catch (std::exception e) {
+	device_channel* c = dev_map.getChannel(ChannelID);
+	if (c == nullptr) {
 		return ERR_INVALID_CHANNEL_ID;
+	}
+	else {
+		return c->send_message(pMsg, pNumMsgs, Timeout);
 	}
 }
 
@@ -107,17 +115,17 @@ existing receive messages to be removed from the PassThru device receive queue.
 DllExport PassThruStartMsgFilter(unsigned long ChannelID, unsigned long FilterType, PASSTHRU_MSG* pMaskMsg, PASSTHRU_MSG* pPatternMsg, PASSTHRU_MSG* pFlowControlMsg, unsigned long* pFilterID) {
 	
 	LOGGER.logInfo("DllExport::PassThruStartMsgFilter", "Asked to start message filter for channel %lu, Filter type: %lu", ChannelID, FilterType);
-	try {
-		return dev_map.getChannel(ChannelID)->add_filter(
+	device_channel* c = dev_map.getChannel(ChannelID);
+	if (c == nullptr) {
+		return ERR_INVALID_CHANNEL_ID;
+	} else {
+		return c->add_filter(
 			FilterType,
 			pMaskMsg,
 			pPatternMsg,
 			pFlowControlMsg,
 			pFilterID
 		);
-	}
-	catch (std::exception e) {
-		return ERR_INVALID_CHANNEL_ID;
 	}
 }
 
@@ -127,11 +135,12 @@ Terminate the specified network protocol filter. Once terminated the filter iden
 */
 DllExport PassThruStopMsgFilter(unsigned long ChannelID, unsigned long FilterID) {
 	LOGGER.logInfo("DllExport::PassThruStopMsgFilter", "Asked to stop message filter for channel %lu. Filter ID: %lu", ChannelID, FilterID);
-	try {
-		return dev_map.getChannel(ChannelID)->rem_filter(FilterID);
-	}
-	catch (std::exception e) {
+	device_channel* c = dev_map.getChannel(ChannelID);
+	if (c == nullptr) {
 		return ERR_INVALID_CHANNEL_ID;
+	}
+	else {
+		return c->rem_filter(FilterID);
 	}
 }
 

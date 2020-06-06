@@ -75,6 +75,13 @@ device_channel* device_table::getChannel(unsigned long id)
 	}
 }
 
+void device_table::processPayload(DATA_PAYLOAD* msg)
+{
+	for (auto& chan: channels) {
+		chan.second.recvPayload(msg);
+	}
+}
+
 device_table dev_map;
 
 device::device(unsigned long id)
@@ -170,6 +177,18 @@ int device_channel::rem_filter(unsigned long filterID)
 {
 	LOGGER.logInfo("CHAN_RFILT", "Removing filter with ID %lu", filterID);
 	return handler->remove_filter(filterID);
+}
+
+void device_channel::recvPayload(DATA_PAYLOAD* p)
+{
+	if (handler != nullptr) {
+		handler->processPayload(p);
+	}
+}
+
+int device_channel::read_messages(PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout)
+{
+	return handler->read_messages(pMsg, pNumMsgs, Timeout);
 }
 
 void device_channel::getConfig(SCONFIG* c)

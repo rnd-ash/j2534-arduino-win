@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "XentryComm.h"
 #include "ArduinoComm.h"
+#include "device.h"
 
 namespace XentryComm{
 
@@ -100,8 +101,7 @@ namespace XentryComm{
 		while (true) {
 			if (ArduinoComm::readPayload(&d)) {
 				if (d.cmd == CMD_CAN) {
-					LOGGER.logInfo("XENTRY", "Incomming data from ECU: "+LOGGER.bytesToString(d.argSize, d.args));
-					// TODO Send messages to channel
+					dev_map.processPayload(&d);
 				}
 			}
 		}
