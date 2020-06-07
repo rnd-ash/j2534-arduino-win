@@ -14,7 +14,7 @@ namespace ArduinoComm {
 	DWORD errors;
 	bool OpenPort() {
 		mutex.lock();
-		handler = CreateFile(L"COM7", GENERIC_READ | GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		handler = CreateFile(L"COM8", GENERIC_READ | GENERIC_WRITE, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 		if (handler == INVALID_HANDLE_VALUE) {
 			LOGGER.logError("ARDUINO", "Cannot create handler");
@@ -59,9 +59,6 @@ namespace ArduinoComm {
 		DWORD written = 0;
 		// Too big for 1 payload for arduino - TODO - split payloads
 		mutex.lock();
-		if (f->cmd == CMD_CAN) {
-			LOGGER.logDebug("ARDUINO_WRITE", "Sending CAN FRAME: " + LOGGER.bytesToString(f->argSize, f->args));
-		}
 		f->argSize++;
 		if (!WriteFile(handler, f, f->argSize+1, NULL, NULL)) {
 			DWORD error = GetLastError();
@@ -84,14 +81,10 @@ namespace ArduinoComm {
 			ReadFile(handler, &f->cmd, len, NULL, NULL);
 			f->argSize = len - 1;
 			mutex.unlock();
-
 			if (f->cmd == CMD_LOG) {
 				LOGGER.logInfo("ARDUINO LOG", "%s", f->args);
 				return false;
-			} else if (f->cmd == CMD_CAN) {
-				LOGGER.logDebug("ARDUINO_READ", "Reading CAN FRAME: " + LOGGER.bytesToString(f->argSize, f->args));
 			}
-
 			return true;
 		}
 		mutex.unlock();

@@ -104,6 +104,7 @@ namespace XentryComm{
 					dev_map.processPayload(&d);
 				}
 			}
+			dev_map.update_channels();
 		}
 		return 1;
 	}

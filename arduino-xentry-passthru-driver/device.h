@@ -25,6 +25,7 @@ public:
 	int rem_filter(unsigned long filterID);
 	void recvPayload(DATA_PAYLOAD *p);
 	int read_messages(PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout);
+	void update_channel();
 private:
 	msg_handler *handler;
 	unsigned long deviceID;
@@ -38,6 +39,7 @@ private:
 class device_table {
 public:
 	device_table();
+	void update_channels();
 	static unsigned long free_id;
 	static unsigned long free_chan_id;
 	int remove_device(unsigned long id);

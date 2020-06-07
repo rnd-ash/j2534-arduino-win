@@ -9,6 +9,13 @@ device_table::device_table()
 	this->device_list = std::map<unsigned long, device>();
 }
 
+void device_table::update_channels()
+{
+	for (auto& channel : channels) {
+		channel.second.update_channel();
+	}
+}
+
 int device_table::remove_device(unsigned long id)
 {
 	if (device_list.find(id) == device_list.end()) {
@@ -189,6 +196,13 @@ void device_channel::recvPayload(DATA_PAYLOAD* p)
 int device_channel::read_messages(PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout)
 {
 	return handler->read_messages(pMsg, pNumMsgs, Timeout);
+}
+
+void device_channel::update_channel()
+{
+	if (handler != nullptr) {
+		handler->update();
+	}
 }
 
 void device_channel::getConfig(SCONFIG* c)

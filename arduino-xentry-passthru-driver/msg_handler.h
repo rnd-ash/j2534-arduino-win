@@ -5,6 +5,7 @@
 #include "ArduinoComm.h"
 #include <vector>
 #include <queue>
+#include <mutex>
 
 struct filter {
 	unsigned long filterType;
@@ -22,7 +23,9 @@ public:
 	int add_filter(unsigned long FilterType, PASSTHRU_MSG* pMaskMsg, PASSTHRU_MSG* pPatternMsg, PASSTHRU_MSG* pFlowControlMsg, unsigned long* pFilterID);
 	int remove_filter(unsigned long filterID);
 	virtual void processPayload(DATA_PAYLOAD* p) = 0;
+	virtual void update() = 0;
 protected:
+	std::mutex send_mutex;
 	static unsigned long free_filter_id;
 	char rxBuffer[4096] = { 0x00 };
 	char txBuffer[4096] = { 0x00 };
@@ -42,6 +45,7 @@ public:
 	can_handler();
 	int send_payload(PASSTHRU_MSG* pMsg, unsigned long* pNumMsgs, unsigned long Timeout, unsigned long baud);
 	void processPayload(DATA_PAYLOAD* p);
+	void update();
 };
 
 class iso15765_handler : public msg_handler {
@@ -51,6 +55,7 @@ public:
 	void processPayload(DATA_PAYLOAD* p);
 	unsigned long st_min;
 	unsigned long bs;
+	void update();
 private:
 	int internal_send_payload();
 	bool inMultiFrame = false;
@@ -60,5 +65,6 @@ private:
 	PASSTHRU_MSG temp_ms;
 	int frame_num = 0x00;
 	bool sending = false;
+	unsigned long last_ecu_resp_time = 0;
 };
 
